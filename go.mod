@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	cloud.google.com/go/storage v1.18.2
-	cuelang.org/go v0.4.1
+	cuelang.org/go v0.4.3
 	github.com/ThalesIgnite/crypto11 v1.2.5
 	github.com/cyberphone/json-canonicalization v0.0.0-20210823021906-dc406ceaf94b
 	github.com/go-openapi/runtime v0.21.0
@@ -26,7 +26,7 @@ require (
 	github.com/sigstore/fulcio v0.1.2-0.20220114150912-86a2036f9bc7
 	github.com/sigstore/rekor v0.4.1-0.20220114213500-23f583409af3
 	github.com/sigstore/sigstore v1.1.1-0.20220115165716-9f61ddc98390
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
 	github.com/theupdateframework/go-tuf v0.0.0-20220113233521-eac0a85ce281
