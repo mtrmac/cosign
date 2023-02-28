@@ -40,12 +40,11 @@ func GenerateCmd(ctx context.Context, regOpts options.RegistryOptions, imageRef 
 	if err != nil {
 		return err
 	}
-	// Overwrite "ref" with a digest to avoid a race where we use a tag
+	// For remote accesses, use digest, not ref, to avoid a race where we use a tag
 	// multiple times, and it potentially points to different things at
 	// each access.
-	ref = digest
 
-	json, err := (&payload.Cosign{Image: digest, Annotations: annotations}).MarshalJSON()
+	json, err := (&payload.Cosign{ClaimedIdentity: ref, ImageDigest: digest.DigestStr(), Annotations: annotations}).MarshalJSON()
 	if err != nil {
 		return err
 	}

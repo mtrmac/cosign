@@ -23,11 +23,33 @@ import (
 	"github.com/sigstore/sigstore/pkg/signature/payload"
 )
 
+// payload.Cosign.ClaimedIdentity wants a name.Reference (with a tag or digest); the obsolete payloads contain just a repo.
+// We don’t really want to allow that in the API, but we can fake that closely enough here…
+type obsoleteReference struct {
+	name.Repository
+}
+
+// Context implements name.Reference
+func (or obsoleteReference) Context() name.Repository {
+	return or.Repository
+}
+
+// Identifier implements name.Reference
+func (obsoleteReference) Identifier() string {
+	return ""
+}
+
+var _ name.Reference = (*obsoleteReference)(nil)
+
 // ObsoletePayload returns the implied payload that some commands expect to match
 // the signature if no payload is provided by the user.
 // DO NOT ADD ANY NEW CALLERS OF THIS.
 func ObsoletePayload(ctx context.Context, digestedImage name.Digest) ([]byte, error) {
-	blob, err := (&payload.Cosign{Image: digestedImage}).MarshalJSON()
+	payload := payload.Cosign{
+		ClaimedIdentity: obsoleteReference{Repository: digestedImage.Context()},
+		ImageDigest:     digestedImage.DigestStr(),
+	}
+	blob, err := payload.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}

@@ -51,7 +51,7 @@ func TestPrintVerification(t *testing.T) {
     {
         "critical": {
             "identity": {
-                "docker-reference": "gcr.io/baz/baz"
+                "docker-reference": "gcr.io/baz/baz:quux"
             },
             "image": {
                 "docker-manifest-digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -95,11 +95,14 @@ func TestPrintVerification(t *testing.T) {
 
 	// Generate the payload for the image, and check the digest.
 	b := bytes.Buffer{}
-	dig3, err := name.NewDigest("gcr.io/baz/baz@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", name.StrictValidation)
+	tag3, err := name.NewTag("gcr.io/baz/baz:quux", name.StrictValidation)
 	if err != nil {
-		t.Fatalf("Error creating test dig3.")
+		t.Fatalf("Error creating test tag3.")
 	}
-	pp, err := (&payload.Cosign{Image: dig3, Annotations: map[string]interface{}{}}).MarshalJSON()
+	pp, err := (&payload.Cosign{
+		ClaimedIdentity: tag3,
+		ImageDigest:     "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		Annotations:     map[string]interface{}{}}).MarshalJSON()
 	if err != nil {
 		t.Fatalf("Error creating cosign payload")
 	}

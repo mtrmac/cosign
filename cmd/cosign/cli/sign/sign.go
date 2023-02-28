@@ -169,7 +169,7 @@ func SignCmd(ro *options.RootOptions, ko options.KeyOpts, signOpts options.SignO
 			if err != nil {
 				return fmt.Errorf("accessing image: %w", err)
 			}
-			err = signDigest(ctx, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
+			err = signDigest(ctx, ref, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
 			if err != nil {
 				return fmt.Errorf("signing digest: %w", err)
 			}
@@ -188,7 +188,7 @@ func SignCmd(ro *options.RootOptions, ko options.KeyOpts, signOpts options.SignO
 				return fmt.Errorf("computing digest: %w", err)
 			}
 			digest := ref.Context().Digest(d.String())
-			err = signDigest(ctx, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
+			err = signDigest(ctx, ref, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
 			if err != nil {
 				return fmt.Errorf("signing digest: %w", err)
 			}
@@ -201,15 +201,16 @@ func SignCmd(ro *options.RootOptions, ko options.KeyOpts, signOpts options.SignO
 	return nil
 }
 
-func signDigest(ctx context.Context, digest name.Digest, payload []byte, ko options.KeyOpts, signOpts options.SignOptions,
+func signDigest(ctx context.Context, claimedIdentity name.Reference, digest name.Digest, payload []byte, ko options.KeyOpts, signOpts options.SignOptions,
 	annotations map[string]interface{},
 	dd mutate.DupeDetector, sv *SignerVerifier, se oci.SignedEntity) error {
 	var err error
 	// The payload can be passed to skip generation.
 	if len(payload) == 0 {
 		payload, err = (&sigPayload.Cosign{
-			Image:       digest,
-			Annotations: annotations,
+			ClaimedIdentity: claimedIdentity,
+			ImageDigest:     digest.DigestStr(),
+			Annotations:     annotations,
 		}).MarshalJSON()
 		if err != nil {
 			return fmt.Errorf("payload: %w", err)
