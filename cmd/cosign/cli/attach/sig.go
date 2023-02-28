@@ -39,7 +39,7 @@ func SignatureCmd(ctx context.Context, regOpts options.RegistryOptions, sigRef, 
 		return errors.New("empty signature")
 	}
 
-	ref, err := name.ParseReference(imageRef, regOpts.NameOptions()...)
+	userImageInput, err := name.ParseReference(imageRef, regOpts.NameOptions()...)
 	if err != nil {
 		return err
 	}
@@ -47,18 +47,14 @@ func SignatureCmd(ctx context.Context, regOpts options.RegistryOptions, sigRef, 
 	if err != nil {
 		return err
 	}
-	digest, err := ociremote.ResolveDigest(ref, ociremoteOpts...)
+	resolvedImageDigest, err := ociremote.ResolveDigest(userImageInput, ociremoteOpts...)
 	if err != nil {
 		return err
 	}
-	// Overwrite "ref" with a digest to avoid a race where we use a tag
-	// multiple times, and it potentially points to different things at
-	// each access.
-	ref = digest // nolint
 
 	var payload []byte
 	if payloadRef == "" {
-		payload, err = cosign.ObsoletePayload(ctx, digest)
+		payload, err = cosign.ObsoletePayload(ctx, resolvedImageDigest)
 	} else {
 		payload, err = os.ReadFile(filepath.Clean(payloadRef))
 	}
@@ -93,7 +89,7 @@ func SignatureCmd(ctx context.Context, regOpts options.RegistryOptions, sigRef, 
 		return err
 	}
 
-	se, err := ociremote.SignedEntity(digest, ociremoteOpts...)
+	se, err := ociremote.SignedEntity(resolvedImageDigest, ociremoteOpts...)
 	if err != nil {
 		return err
 	}
@@ -105,7 +101,7 @@ func SignatureCmd(ctx context.Context, regOpts options.RegistryOptions, sigRef, 
 	}
 
 	// Publish the signatures associated with this entity
-	return ociremote.WriteSignatures(digest.Repository, newSE, ociremoteOpts...)
+	return ociremote.WriteSignatures(resolvedImageDigest.Repository, newSE, ociremoteOpts...)
 }
 
 type SignatureArgType uint8
