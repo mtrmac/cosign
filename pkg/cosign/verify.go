@@ -57,7 +57,6 @@ import (
 	"github.com/sigstore/sigstore/pkg/signature"
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 	"github.com/sigstore/sigstore/pkg/signature/options"
-	sigPayload "github.com/sigstore/sigstore/pkg/signature/payload"
 	tsaverification "github.com/sigstore/timestamp-authority/pkg/verification"
 )
 
@@ -121,8 +120,10 @@ type CheckOpts struct {
 	// It is a map from log id to LogIDMetadata. It is a map from LogID to crypto.PublicKey. LogID is derived from the PublicKey (see RFC 6962 S3.2).
 	CTLogPubKeys *TrustedTransparencyLogPubKeys
 
-	// SignatureRef is the reference to the signature file
+	// SignatureRef is the reference to the signature file. Either none or both of SignatureRef and PayloadRef must be specified.
 	SignatureRef string
+	// PayloadRef is a reference to the paylaod file. Either none or both of SignatureRef and PayloadRef must be specified.
+	PayloadRef string
 
 	// Identities is an array of Identity (Subject, Issuer) matchers that have
 	// to be met for the signature to ve valid.
@@ -509,7 +510,10 @@ func VerifyImageSignatures(ctx context.Context, signedImgRef name.Reference, co 
 			return nil, false, err
 		}
 	} else {
-		sigs, err = loadSignatureFromFile(sigRef, signedImgRef, co)
+		if co.PayloadRef == "" {
+			return nil, false, errors.New("payload is required with a manually-provided signature")
+		}
+		sigs, err = loadSignatureFromFile(sigRef, co.PayloadRef)
 		if err != nil {
 			return nil, false, err
 		}
@@ -782,7 +786,7 @@ func VerifyImageSignature(ctx context.Context, sig oci.Signature, h v1.Hash, co 
 	return verifyInternal(ctx, sig, h, verifyOCISignature, co)
 }
 
-func loadSignatureFromFile(sigRef string, signedImgRef name.Reference, co *CheckOpts) (oci.Signatures, error) {
+func loadSignatureFromFile(sigRef string, payloadRef string) (oci.Signatures, error) {
 	var b64sig string
 	targetSig, err := blob.LoadFileOrURL(sigRef)
 	if err != nil {
@@ -800,13 +804,7 @@ func loadSignatureFromFile(sigRef string, signedImgRef name.Reference, co *Check
 		b64sig = base64.StdEncoding.EncodeToString(targetSig)
 	}
 
-	digest, err := ociremote.ResolveDigest(signedImgRef, co.RegistryClientOpts...)
-	if err != nil {
-		return nil, err
-	}
-
-	payload, err := (&sigPayload.Cosign{Image: digest}).MarshalJSON()
-
+	payload, err := blob.LoadFileOrURL(payloadRef)
 	if err != nil {
 		return nil, err
 	}
@@ -1366,7 +1364,10 @@ func verifyImageSignaturesExperimentalOCI(ctx context.Context, signedImgRef name
 			return nil, false, err
 		}
 	} else {
-		sigs, err = loadSignatureFromFile(sigRef, signedImgRef, co)
+		if co.PayloadRef == "" {
+			return nil, false, errors.New("payload is required with a manually-provided signature")
+		}
+		sigs, err = loadSignatureFromFile(sigRef, co.PayloadRef)
 		if err != nil {
 			return nil, false, err
 		}
