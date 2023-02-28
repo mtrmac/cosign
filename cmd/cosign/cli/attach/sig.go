@@ -28,7 +28,6 @@ import (
 	"github.com/sigstore/cosign/v2/pkg/oci/mutate"
 	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"github.com/sigstore/cosign/v2/pkg/oci/static"
-	sigPayload "github.com/sigstore/sigstore/pkg/signature/payload"
 )
 
 func SignatureCmd(ctx context.Context, regOpts options.RegistryOptions, sigRef, payloadRef, certRef, certChainRef, imageRef string) error {
@@ -56,12 +55,10 @@ func SignatureCmd(ctx context.Context, regOpts options.RegistryOptions, sigRef, 
 	// each access.
 	ref = digest // nolint
 
-	var payload []byte
 	if payloadRef == "" {
-		payload, err = (&sigPayload.Cosign{Image: digest}).MarshalJSON()
-	} else {
-		payload, err = os.ReadFile(filepath.Clean(payloadRef))
+		return errors.New("payload not provided")
 	}
+	payload, err := os.ReadFile(filepath.Clean(payloadRef))
 	if err != nil {
 		return err
 	}
