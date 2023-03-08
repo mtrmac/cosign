@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/sigstore/cosign/v2/internal/ui"
 	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"github.com/spf13/cobra"
@@ -12,12 +13,15 @@ import (
 
 // CriticalImageOptions allows specifying the expected image digest to operate on.
 type CriticalImageOptions struct {
+	ExpectedImageDigest string
 }
 
 var _ Interface = (*CriticalImageOptions)(nil)
 
 // AddFlags implements Interface
-func (*CriticalImageOptions) AddFlags(cmd *cobra.Command) {
+func (o *CriticalImageOptions) AddFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVar(&o.ExpectedImageDigest, "digest", "",
+		"the digest the image reference refers to")
 	// Nothing
 }
 
@@ -32,15 +36,35 @@ func (o *CriticalImageOptions) ResolveReference(ctx context.Context, imageRef st
 	if err != nil {
 		return nil, name.Digest{}, err
 	}
+	// FIXME: tests?
 	var digest name.Digest
 	if userInputDigest != nil {
+		if o.ExpectedImageDigest != "" {
+			expected, err := v1.NewHash(o.ExpectedImageDigest)
+			if err != nil {
+				return nil, name.Digest{}, fmt.Errorf("parsing --digest %s: %w", o.ExpectedImageDigest, err)
+			}
+			if userInputDigest.DigestStr() != expected.String() {
+				return nil, name.Digest{}, fmt.Errorf("--digest %s and image %s contain different digests", o.ExpectedImageDigest, imageRef)
+			}
+		}
 		digest = *userInputDigest
+		// FIXME: For signing, warn in this case
 	} else {
-		d, err := ociremote.ResolveDigest(ref, ociremoteOpts...)
+		registryDigest, err := ociremote.ResolveDigest(ref, ociremoteOpts...)
 		if err != nil {
 			return nil, name.Digest{}, err
 		}
-		digest = d
+		if o.ExpectedImageDigest != "" {
+			expected, err := v1.NewHash(o.ExpectedImageDigest)
+			if err != nil {
+				return nil, name.Digest{}, fmt.Errorf("parsing --digest %s: %w", o.ExpectedImageDigest, err)
+			}
+			if registryDigest.DigestStr() != expected.String() {
+				return nil, name.Digest{}, fmt.Errorf("image %s resolves to %s, expected (from --digest) %s", imageRef, registryDigest.DigestStr(), o.ExpectedImageDigest)
+			}
+		}
+		digest = registryDigest
 	}
 	return ref, digest, nil
 }
@@ -54,7 +78,7 @@ func (o *CriticalImageOptions) parseReference(ctx context.Context, imageRef stri
 	digest := (*name.Digest)(nil)
 	if d, ok := ref.(name.Digest); ok {
 		digest = &d
-	} else {
+	} else if o.ExpectedImageDigest == "" { // FIXME: Integrate differently; and test
 		msg := fmt.Sprintf(ui.TagReferenceMessage, imageRef)
 		ui.Warnf(ctx, msg)
 	}
