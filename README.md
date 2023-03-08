@@ -125,7 +125,7 @@ $ cosign verify --key cosign.pub $IMAGE_URI:1h
 The following checks were performed on these signatures:
   - The cosign claims were validated
   - The signatures were verified against the specified public key
-{"Critical":{"Identity":{"docker-reference":""},"Image":{"Docker-manifest-digest":"sha256:87ef60f558bad79beea6425a3b28989f01dd417164150ab3baab98dcbf04def8"},"Type":"cosign container image signature"},"Optional":null}
+{"Critical":{"Identity":{"docker-reference":"$IMAGE_URI:1h"},"Image":{"Docker-manifest-digest":"sha256:87ef60f558bad79beea6425a3b28989f01dd417164150ab3baab98dcbf04def8"},"Type":"cosign container image signature"},"Optional":null}
 ```
 
 
@@ -285,7 +285,7 @@ The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - The signatures were verified against the specified public key
 
-[{"critical":{"identity":{"docker-reference":"localhost:5000/tcpconnect"},"image":{"docker-manifest-digest":"sha256:7a91c50d922925f152fec96ed1d84b7bc6b2079c169d68826f6cf307f22d40e6"},"type":"cosign container image signature"},"optional":null}]
+[{"critical":{"identity":{"docker-reference":"localhost:5000/tcpconnect:test"},"image":{"docker-manifest-digest":"sha256:7a91c50d922925f152fec96ed1d84b7bc6b2079c169d68826f6cf307f22d40e6"},"type":"cosign container image signature"},"optional":null}]
 
 ```
 
@@ -386,7 +386,7 @@ That looks like:
 {
     "critical": {
            "identity": {
-               "docker-reference": "testing/manifest"
+               "docker-reference": "docker.io/testing/manifest:latest"
            },
            "image": {
                "Docker-manifest-digest": "sha256:20be...fe55"
@@ -394,7 +394,7 @@ That looks like:
            "type": "cosign container image signature"
     },
     "optional": {
-           "creator": "Bob the Builder",
+           "creator": "cosign 2.0.1",
            "timestamp": 1458239713
     }
 }
@@ -535,7 +535,7 @@ The following checks were performed on each of these signatures:
   - The signatures were verified against the specified public key
   - The code-signing certificate was verified using trusted certificate authority certificates
 
-{"Critical":{"Identity":{"docker-reference":""},"Image":{"Docker-manifest-digest":"sha256:551e6cce7ed2e5c914998f931b277bc879e675b74843e6f29bc17f3b5f692bef"},"Type":"cosign container image signature"},"Optional":null}
+{"Critical":{"Identity":{"docker-reference":"$IMAGE_FIXME"},"Image":{"Docker-manifest-digest":"sha256:551e6cce7ed2e5c914998f931b277bc879e675b74843e6f29bc17f3b5f692bef"},"Type":"cosign container image signature"},"Optional":null}
 ```
 
 ## FAQ
@@ -634,7 +634,7 @@ $ cosign verify --key cosign.pub -a tag=$TAG $IMAGE_URI | jq .
 {
   "Critical": {
     "Identity": {
-      "docker-reference": ""
+      "docker-reference": "$IMAGE_SIGNED"
     },
     "Image": {
       "Docker-manifest-digest": "97fc222cee7991b5b061d4d4afdb5f3428fcb0c9054e1690313786befa1e4e36"
@@ -721,7 +721,7 @@ $ cosign verify --key cosign.pub dlorenc/demo | jq .
 {
   "Critical": {
     "Identity": {
-      "docker-reference": ""
+      "docker-reference": "$IMAGE_FIXME"
     },
     "Image": {
       "Docker-manifest-digest": "97fc222cee7991b5b061d4d4afdb5f3428fcb0c9054e1690313786befa1e4e36"
@@ -745,7 +745,7 @@ $ cosign sign --key cosign.key -a sig=counter dlorenc/demo:mysignature
 Enter password for private key:
 Pushing signature to: dlorenc/demo:sha256-71f70e5d29bde87f988740665257c35b1c6f52dafa20fab4ba16b3b1f4c6ba0e.sig
 $ cosign verify --key cosign.pub dlorenc/demo:mysignature
-{"Critical":{"Identity":{"docker-reference":""},"Image":{"Docker-manifest-digest":"71f70e5d29bde87f988740665257c35b1c6f52dafa20fab4ba16b3b1f4c6ba0e"},"Type":"cosign container image signature"},"Optional":{"sig":"counter"}}
+{"Critical":{"Identity":{"docker-reference":"dlorenc/demo:mysignature"},"Image":{"Docker-manifest-digest":"71f70e5d29bde87f988740665257c35b1c6f52dafa20fab4ba16b3b1f4c6ba0e"},"Type":"cosign container image signature"},"Optional":{"sig":"counter"}}
 ```
 
 Finally, check the original signature:

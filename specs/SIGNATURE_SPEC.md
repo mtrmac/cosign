@@ -271,7 +271,7 @@ For example:
 {
     "critical": {
            "identity": {
-               "docker-reference": "testing/manifest"
+               "docker-reference": "docker.io/testing/manifest:1.23"
            },
            "image": {
                "Docker-manifest-digest": "sha256:20be...fe55"
@@ -279,7 +279,7 @@ For example:
            "type": "cosign container image signature"
     },
     "optional": {
-           "creator": "atomic",
+           "creator": "cosign 2.0.1",
            "timestamp": 1458239713
     }
 }
