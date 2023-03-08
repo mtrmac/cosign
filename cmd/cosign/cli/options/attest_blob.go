@@ -43,7 +43,7 @@ type AttestBlobOptions struct {
 	SecurityKey SecurityKeyOptions
 }
 
-var _ Interface = (*AttestOptions)(nil)
+var _ Interface = (*AttestBlobOptions)(nil)
 
 // AddFlags implements Interface
 func (o *AttestBlobOptions) AddFlags(cmd *cobra.Command) {
