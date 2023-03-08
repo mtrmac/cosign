@@ -155,7 +155,7 @@ func SignCmd(ro *options.RootOptions, ko options.KeyOpts, signOpts options.SignO
 	}
 	annotations := am.Annotations
 	for _, inputImg := range imgs {
-		ref, err := options.ParseCriticalImageReference(ctx, inputImg, regOpts.NameOptions())
+		ref, err := signOpts.CriticalImage.ParseReference(ctx, inputImg, regOpts.NameOptions())
 		if err != nil {
 			return err
 		}

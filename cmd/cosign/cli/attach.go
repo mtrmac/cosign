@@ -101,7 +101,7 @@ func attachAttestation() *cobra.Command {
 		Args:             cobra.MinimumNArgs(1),
 		PersistentPreRun: options.BindViper,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return attach.AttestationCmd(cmd.Context(), o.Registry, o.Attestations, args[0])
+			return attach.AttestationCmd(cmd.Context(), *o, args[0])
 		},
 	}
 

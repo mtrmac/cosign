@@ -31,12 +31,13 @@ type AttestOptions struct {
 	TlogUpload       bool
 	TSAServerURL     string
 
-	Rekor       RekorOptions
-	Fulcio      FulcioOptions
-	OIDC        OIDCOptions
-	SecurityKey SecurityKeyOptions
-	Predicate   PredicateLocalOptions
-	Registry    RegistryOptions
+	Rekor         RekorOptions
+	Fulcio        FulcioOptions
+	OIDC          OIDCOptions
+	SecurityKey   SecurityKeyOptions
+	Predicate     PredicateLocalOptions
+	CriticalImage CriticalImageOptions
+	Registry      RegistryOptions
 }
 
 var _ Interface = (*AttestOptions)(nil)
@@ -48,6 +49,7 @@ func (o *AttestOptions) AddFlags(cmd *cobra.Command) {
 	o.Fulcio.AddFlags(cmd)
 	o.OIDC.AddFlags(cmd)
 	o.Rekor.AddFlags(cmd)
+	o.CriticalImage.AddFlags(cmd)
 	o.Registry.AddFlags(cmd)
 
 	cmd.Flags().StringVar(&o.Key, "key", "",

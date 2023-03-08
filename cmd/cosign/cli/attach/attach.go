@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/google/go-containerregistry/pkg/name"
 	ssldsse "github.com/secure-systems-lab/go-securesystemslib/dsse"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/options"
 	"github.com/sigstore/cosign/v2/pkg/oci/mutate"
@@ -29,14 +28,14 @@ import (
 	"github.com/sigstore/cosign/v2/pkg/types"
 )
 
-func AttestationCmd(ctx context.Context, regOpts options.RegistryOptions, signedPayloads []string, imageRef string) error {
-	ociremoteOpts, err := regOpts.ClientOpts(ctx)
+func AttestationCmd(ctx context.Context, opts options.AttachAttestationOptions, imageRef string) error {
+	ociremoteOpts, err := opts.Registry.ClientOpts(ctx)
 	if err != nil {
 		return fmt.Errorf("constructing client options: %w", err)
 	}
 
-	for _, payload := range signedPayloads {
-		if err := attachAttestation(ctx, ociremoteOpts, payload, imageRef, regOpts.NameOptions()); err != nil {
+	for _, payload := range opts.Attestations {
+		if err := attachAttestation(ctx, opts, ociremoteOpts, payload, imageRef); err != nil {
 			return fmt.Errorf("attaching payload from %s: %w", payload, err)
 		}
 	}
@@ -44,7 +43,7 @@ func AttestationCmd(ctx context.Context, regOpts options.RegistryOptions, signed
 	return nil
 }
 
-func attachAttestation(ctx context.Context, remoteOpts []ociremote.Option, signedPayload, imageRef string, nameOpts []name.Option) error {
+func attachAttestation(ctx context.Context, opts options.AttachAttestationOptions, remoteOpts []ociremote.Option, signedPayload, imageRef string) error {
 	fmt.Fprintf(os.Stderr, "Using payload from: %s", signedPayload)
 	attestationFile, err := os.Open(signedPayload)
 	if err != nil {
@@ -71,7 +70,7 @@ func attachAttestation(ctx context.Context, remoteOpts []ociremote.Option, signe
 			return fmt.Errorf("could not attach attestation without having signatures")
 		}
 
-		ref, err := options.ParseCriticalImageReference(ctx, imageRef, nameOpts)
+		ref, err := opts.CriticalImage.ParseReference(ctx, imageRef, opts.Registry.NameOptions())
 		if err != nil {
 			return err
 		}

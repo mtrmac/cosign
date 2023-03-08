@@ -82,16 +82,17 @@ func Attest() *cobra.Command {
 				TSAServerURL:             o.TSAServerURL,
 			}
 			attestCommand := attest.AttestCommand{
-				KeyOpts:         ko,
-				RegistryOptions: o.Registry,
-				CertPath:        o.Cert,
-				CertChainPath:   o.CertChain,
-				NoUpload:        o.NoUpload,
-				PredicatePath:   o.Predicate.Path,
-				PredicateType:   o.Predicate.Type,
-				Replace:         o.Replace,
-				Timeout:         ro.Timeout,
-				TlogUpload:      o.TlogUpload,
+				KeyOpts:              ko,
+				CriticalImageOptions: o.CriticalImage,
+				RegistryOptions:      o.Registry,
+				CertPath:             o.Cert,
+				CertChainPath:        o.CertChain,
+				NoUpload:             o.NoUpload,
+				PredicatePath:        o.Predicate.Path,
+				PredicateType:        o.Predicate.Type,
+				Replace:              o.Replace,
+				Timeout:              ro.Timeout,
+				TlogUpload:           o.TlogUpload,
 			}
 
 			for _, img := range args {

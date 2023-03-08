@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ParseCriticalImageReference(t *testing.T) {
+func Test_CriticalImageOptions_ParseReference(t *testing.T) {
 	var tests = []struct {
 		ref             string
 		expectedWarning string
@@ -21,8 +21,9 @@ func Test_ParseCriticalImageReference(t *testing.T) {
 	for _, tt := range tests {
 		var parsedRef name.Reference
 		var err error
+		opts := CriticalImageOptions{}
 		stderr := ui.RunWithTestCtx(func(ctx context.Context, write ui.WriteFunc) {
-			parsedRef, err = ParseCriticalImageReference(ctx, tt.ref, nil)
+			parsedRef, err = opts.ParseReference(ctx, tt.ref, nil)
 		})
 		require.NoError(t, err)
 		if len(tt.expectedWarning) > 0 {

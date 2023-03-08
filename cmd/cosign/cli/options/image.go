@@ -6,9 +6,21 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/sigstore/cosign/v2/internal/ui"
+	"github.com/spf13/cobra"
 )
 
-func ParseCriticalImageReference(ctx context.Context, imageRef string, nameOpts []name.Option) (name.Reference, error) {
+// CriticalImageOptions allows specifying the expected image digest to operate on.
+type CriticalImageOptions struct {
+}
+
+var _ Interface = (*CriticalImageOptions)(nil)
+
+// AddFlags implements Interface
+func (*CriticalImageOptions) AddFlags(cmd *cobra.Command) {
+	// Nothing
+}
+
+func (o *CriticalImageOptions) ParseReference(ctx context.Context, imageRef string, nameOpts []name.Option) (name.Reference, error) {
 	ref, err := name.ParseReference(imageRef, nameOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("parsing image name %s: %w", imageRef, err)

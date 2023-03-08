@@ -119,11 +119,14 @@ func (o *AttachSBOMOptions) MediaType() (types.MediaType, error) {
 // AttachAttestationOptions is the top level wrapper for the attach attestation command.
 type AttachAttestationOptions struct {
 	Attestations []string
-	Registry     RegistryOptions
+
+	CriticalImage CriticalImageOptions
+	Registry      RegistryOptions
 }
 
 // AddFlags implements Interface
 func (o *AttachAttestationOptions) AddFlags(cmd *cobra.Command) {
+	o.CriticalImage.AddFlags(cmd)
 	o.Registry.AddFlags(cmd)
 
 	cmd.Flags().StringArrayVarP(&o.Attestations, "attestation", "", nil,

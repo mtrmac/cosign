@@ -42,6 +42,7 @@ type SignOptions struct {
 	OIDC        OIDCOptions
 	SecurityKey SecurityKeyOptions
 	AnnotationOptions
+	CriticalImage        CriticalImageOptions
 	Registry             RegistryOptions
 	RegistryExperimental RegistryExperimentalOptions
 }
@@ -55,6 +56,7 @@ func (o *SignOptions) AddFlags(cmd *cobra.Command) {
 	o.OIDC.AddFlags(cmd)
 	o.SecurityKey.AddFlags(cmd)
 	o.AnnotationOptions.AddFlags(cmd)
+	o.CriticalImage.AddFlags(cmd)
 	o.Registry.AddFlags(cmd)
 	o.RegistryExperimental.AddFlags(cmd)
 

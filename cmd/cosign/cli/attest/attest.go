@@ -69,6 +69,7 @@ func uploadToTlog(ctx context.Context, sv *sign.SignerVerifier, rekorURL string,
 // nolint
 type AttestCommand struct {
 	options.KeyOpts
+	options.CriticalImageOptions
 	options.RegistryOptions
 	CertPath      string
 	CertChainPath string
@@ -92,7 +93,7 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 	if err != nil {
 		return err
 	}
-	ref, err := options.ParseCriticalImageReference(ctx, imageRef, c.NameOptions())
+	ref, err := c.CriticalImageOptions.ParseReference(ctx, imageRef, c.NameOptions())
 	if err != nil {
 		return err
 	}
