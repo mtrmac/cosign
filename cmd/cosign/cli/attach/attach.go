@@ -70,18 +70,10 @@ func attachAttestation(ctx context.Context, opts options.AttachAttestationOption
 			return fmt.Errorf("could not attach attestation without having signatures")
 		}
 
-		ref, err := opts.CriticalImage.ParseReference(ctx, imageRef, opts.Registry.NameOptions())
+		_, resolvedImageDigest, err := opts.CriticalImage.ResolveReference(ctx, imageRef, opts.Registry.NameOptions(), remoteOpts)
 		if err != nil {
 			return err
 		}
-		digest, err := ociremote.ResolveDigest(ref, remoteOpts...)
-		if err != nil {
-			return err
-		}
-		// Overwrite "ref" with a digest to avoid a race where we use a tag
-		// multiple times, and it potentially points to different things at
-		// each access.
-		ref = digest // nolint
 
 		opts := []static.Option{static.WithLayerMediaType(types.DssePayloadType)}
 		att, err := static.NewAttestation(payload, opts...)
@@ -89,7 +81,7 @@ func attachAttestation(ctx context.Context, opts options.AttachAttestationOption
 			return err
 		}
 
-		se, err := ociremote.SignedEntity(digest, remoteOpts...)
+		se, err := ociremote.SignedEntity(resolvedImageDigest, remoteOpts...)
 		if err != nil {
 			return err
 		}
@@ -100,7 +92,7 @@ func attachAttestation(ctx context.Context, opts options.AttachAttestationOption
 		}
 
 		// Publish the signatures associated with this entity
-		err = ociremote.WriteAttestations(digest.Repository, newSE, remoteOpts...)
+		err = ociremote.WriteAttestations(resolvedImageDigest.Repository, newSE, remoteOpts...)
 		if err != nil {
 			return err
 		}

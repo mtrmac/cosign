@@ -23,7 +23,7 @@ func Test_CriticalImageOptions_ParseReference(t *testing.T) {
 		var err error
 		opts := CriticalImageOptions{}
 		stderr := ui.RunWithTestCtx(func(ctx context.Context, write ui.WriteFunc) {
-			parsedRef, err = opts.ParseReference(ctx, tt.ref, nil)
+			parsedRef, err = opts.parseReference(ctx, tt.ref, nil)
 		})
 		require.NoError(t, err)
 		if len(tt.expectedWarning) > 0 {

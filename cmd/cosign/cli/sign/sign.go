@@ -155,28 +155,28 @@ func SignCmd(ro *options.RootOptions, ko options.KeyOpts, signOpts options.SignO
 	}
 	annotations := am.Annotations
 	for _, inputImg := range imgs {
-		ref, err := signOpts.CriticalImage.ParseReference(ctx, inputImg, regOpts.NameOptions())
+		userImageInput, _, err := signOpts.CriticalImage.ResolveReference(ctx, inputImg, regOpts.NameOptions(), opts)
 		if err != nil {
 			return err
 		}
-		ref, err = GetAttachedImageRef(ref, signOpts.Attachment, opts...)
+		userImageInput, err = GetAttachedImageRef(userImageInput, signOpts.Attachment, opts...)
 		if err != nil {
 			return fmt.Errorf("unable to resolve attachment %s for image %s", signOpts.Attachment, inputImg)
 		}
 
-		if digest, ok := ref.(name.Digest); ok && !signOpts.Recursive {
-			se, err := ociremote.SignedEntity(ref, opts...)
+		if digest, ok := userImageInput.(name.Digest); ok && !signOpts.Recursive {
+			se, err := ociremote.SignedEntity(userImageInput, opts...)
 			if err != nil {
 				return fmt.Errorf("accessing image: %w", err)
 			}
-			err = signDigest(ctx, ref, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
+			err = signDigest(ctx, userImageInput, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
 			if err != nil {
 				return fmt.Errorf("signing digest: %w", err)
 			}
 			continue
 		}
 
-		se, err := ociremote.SignedEntity(ref, opts...)
+		se, err := ociremote.SignedEntity(userImageInput, opts...)
 		if err != nil {
 			return fmt.Errorf("accessing entity: %w", err)
 		}
@@ -187,8 +187,8 @@ func SignCmd(ro *options.RootOptions, ko options.KeyOpts, signOpts options.SignO
 			if err != nil {
 				return fmt.Errorf("computing digest: %w", err)
 			}
-			digest := ref.Context().Digest(d.String())
-			err = signDigest(ctx, ref, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
+			digest := userImageInput.Context().Digest(d.String())
+			err = signDigest(ctx, userImageInput, digest, staticPayload, ko, signOpts, annotations, dd, sv, se)
 			if err != nil {
 				return fmt.Errorf("signing digest: %w", err)
 			}

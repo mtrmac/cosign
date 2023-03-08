@@ -93,10 +93,6 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 	if err != nil {
 		return err
 	}
-	ref, err := c.CriticalImageOptions.ParseReference(ctx, imageRef, c.NameOptions())
-	if err != nil {
-		return err
-	}
 
 	if c.Timeout != 0 {
 		var cancelFn context.CancelFunc
@@ -108,15 +104,11 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 	if err != nil {
 		return err
 	}
-	digest, err := ociremote.ResolveDigest(ref, ociremoteOpts...)
+	_, resolvedImageDigest, err := c.CriticalImageOptions.ResolveReference(ctx, imageRef, c.NameOptions(), ociremoteOpts)
 	if err != nil {
 		return err
 	}
-	h, _ := v1.NewHash(digest.Identifier())
-	// Overwrite "ref" with a digest to avoid a race where we use a tag
-	// multiple times, and it potentially points to different things at
-	// each access.
-	ref = digest // nolint
+	h, _ := v1.NewHash(resolvedImageDigest.Identifier())
 
 	sv, err := sign.SignerFromKeyOpts(ctx, c.CertPath, c.CertChainPath, c.KeyOpts)
 	if err != nil {
@@ -143,7 +135,7 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 		Predicate: predicate,
 		Type:      c.PredicateType,
 		Digest:    h.Hex,
-		Repo:      digest.Repository.String(),
+		Repo:      resolvedImageDigest.Repository.String(),
 	})
 	if err != nil {
 		return err
@@ -190,7 +182,7 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 	opts = append(opts, static.WithAnnotations(predicateTypeAnnotation))
 
 	// Check whether we should be uploading to the transparency log
-	shouldUpload, err := sign.ShouldUploadToTlog(ctx, c.KeyOpts, digest, c.TlogUpload)
+	shouldUpload, err := sign.ShouldUploadToTlog(ctx, c.KeyOpts, resolvedImageDigest, c.TlogUpload)
 	if err != nil {
 		return fmt.Errorf("should upload to tlog: %w", err)
 	}
@@ -209,7 +201,7 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 		return err
 	}
 
-	se, err := ociremote.SignedEntity(digest, ociremoteOpts...)
+	se, err := ociremote.SignedEntity(resolvedImageDigest, ociremoteOpts...)
 	if err != nil {
 		return err
 	}
@@ -230,5 +222,5 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 	}
 
 	// Publish the attestations associated with this entity
-	return ociremote.WriteAttestations(digest.Repository, newSE, ociremoteOpts...)
+	return ociremote.WriteAttestations(resolvedImageDigest.Repository, newSE, ociremoteOpts...)
 }
