@@ -23,7 +23,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	ssldsse "github.com/secure-systems-lab/go-securesystemslib/dsse"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/options"
-	"github.com/sigstore/cosign/v2/internal/ui"
 	"github.com/sigstore/cosign/v2/pkg/oci/mutate"
 	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"github.com/sigstore/cosign/v2/pkg/oci/static"
@@ -72,13 +71,9 @@ func attachAttestation(ctx context.Context, remoteOpts []ociremote.Option, signe
 			return fmt.Errorf("could not attach attestation without having signatures")
 		}
 
-		ref, err := name.ParseReference(imageRef, nameOpts...)
+		ref, err := options.ParseCriticalImageReference(ctx, imageRef, nameOpts)
 		if err != nil {
 			return err
-		}
-		if _, ok := ref.(name.Digest); !ok {
-			msg := fmt.Sprintf(ui.TagReferenceMessage, imageRef)
-			ui.Warnf(ctx, msg)
 		}
 		digest, err := ociremote.ResolveDigest(ref, remoteOpts...)
 		if err != nil {

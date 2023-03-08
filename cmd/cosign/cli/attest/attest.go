@@ -25,7 +25,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/options"
@@ -33,7 +32,6 @@ import (
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/sign"
 	"github.com/sigstore/cosign/v2/internal/pkg/cosign/tsa"
 	tsaclient "github.com/sigstore/cosign/v2/internal/pkg/cosign/tsa/client"
-	"github.com/sigstore/cosign/v2/internal/ui"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/pkg/cosign/attestation"
 	cbundle "github.com/sigstore/cosign/v2/pkg/cosign/bundle"
@@ -94,13 +92,9 @@ func (c *AttestCommand) Exec(ctx context.Context, imageRef string) error {
 	if err != nil {
 		return err
 	}
-	ref, err := name.ParseReference(imageRef, c.NameOptions()...)
+	ref, err := options.ParseCriticalImageReference(ctx, imageRef, c.NameOptions())
 	if err != nil {
-		return fmt.Errorf("parsing reference: %w", err)
-	}
-	if _, ok := ref.(name.Digest); !ok {
-		msg := fmt.Sprintf(ui.TagReferenceMessage, imageRef)
-		ui.Warnf(ctx, msg)
+		return err
 	}
 
 	if c.Timeout != 0 {

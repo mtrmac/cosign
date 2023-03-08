@@ -26,13 +26,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/generate"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/options"
-	"github.com/sigstore/cosign/v2/internal/ui"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/test"
 	"github.com/sigstore/sigstore/pkg/cryptoutils"
@@ -208,31 +203,5 @@ func Test_signerFromKeyRefFailureEmptyChainFile(t *testing.T) {
 	_, err = signerFromKeyRef(ctx, certFile, tmpChainFile.Name(), keyFile, pass("foo"))
 	if err == nil || err.Error() != "no certificates in certificate chain" {
 		t.Fatalf("expected empty chain error, got %v", err)
-	}
-}
-
-func Test_ParseOCIReference(t *testing.T) {
-	var tests = []struct {
-		ref             string
-		expectedWarning string
-	}{
-		{"image:bytag", "WARNING: Image reference image:bytag uses a tag, not a digest"},
-		{"image@sha256:be5d77c62dbe7fedfb0a4e5ec2f91078080800ab1f18358e5f31fcc8faa023c4", ""},
-	}
-	for _, tt := range tests {
-		var parsedRef name.Reference
-		var err error
-		stderr := ui.RunWithTestCtx(func(ctx context.Context, write ui.WriteFunc) {
-			parsedRef, err = ParseOCIReference(ctx, tt.ref)
-		})
-		require.NoError(t, err)
-		if len(tt.expectedWarning) > 0 {
-			assert.Contains(t, stderr, tt.expectedWarning, stderr, "bad warning message")
-		} else {
-			assert.Empty(t, stderr, "expected no warning")
-		}
-		expectedRef, err := name.ParseReference(tt.ref)
-		require.NoError(t, err)
-		assert.Equal(t, expectedRef.Name(), parsedRef.Name())
 	}
 }
