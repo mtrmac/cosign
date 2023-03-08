@@ -12,18 +12,31 @@ import (
 
 func Test_CriticalImageOptions_ParseReference(t *testing.T) {
 	var tests = []struct {
-		ref             string
-		expectedWarning string
+		ref                         string
+		expectedUserImageInput      string
+		expectedResolvedImageDigest string // "" for nil
+		expectedWarning             string
 	}{
-		{"image:bytag", "WARNING: Image reference image:bytag uses a tag, not a digest"},
-		{"image@sha256:be5d77c62dbe7fedfb0a4e5ec2f91078080800ab1f18358e5f31fcc8faa023c4", ""},
+		{
+			"image:bytag",
+			"image:bytag",
+			"",
+			"WARNING: Image reference image:bytag uses a tag, not a digest",
+		},
+		{
+			"image@sha256:be5d77c62dbe7fedfb0a4e5ec2f91078080800ab1f18358e5f31fcc8faa023c4",
+			"image@sha256:be5d77c62dbe7fedfb0a4e5ec2f91078080800ab1f18358e5f31fcc8faa023c4",
+			"image@sha256:be5d77c62dbe7fedfb0a4e5ec2f91078080800ab1f18358e5f31fcc8faa023c4",
+			"",
+		},
 	}
 	for _, tt := range tests {
-		var parsedRef name.Reference
+		var userImageInput name.Reference
+		var resolvedImageDigest *name.Digest
 		var err error
 		opts := CriticalImageOptions{}
 		stderr := ui.RunWithTestCtx(func(ctx context.Context, write ui.WriteFunc) {
-			parsedRef, err = opts.parseReference(ctx, tt.ref, nil)
+			userImageInput, resolvedImageDigest, err = opts.parseReference(ctx, tt.ref, nil)
 		})
 		require.NoError(t, err)
 		if len(tt.expectedWarning) > 0 {
@@ -31,8 +44,16 @@ func Test_CriticalImageOptions_ParseReference(t *testing.T) {
 		} else {
 			assert.Empty(t, stderr, "expected no warning")
 		}
-		expectedRef, err := name.ParseReference(tt.ref)
+		expectedUI, err := name.ParseReference(tt.expectedUserImageInput)
 		require.NoError(t, err)
-		assert.Equal(t, expectedRef.Name(), parsedRef.Name())
+		assert.Equal(t, expectedUI.Name(), userImageInput.Name())
+		if tt.expectedResolvedImageDigest == "" {
+			assert.Nil(t, resolvedImageDigest)
+		} else {
+			require.NotNil(t, resolvedImageDigest)
+			expectedRID, err := name.NewDigest(tt.expectedResolvedImageDigest)
+			require.NoError(t, err)
+			assert.Equal(t, expectedRID.Name(), resolvedImageDigest.Name())
+		}
 	}
 }
