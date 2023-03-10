@@ -26,7 +26,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/generate"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/options"
@@ -215,17 +217,22 @@ func Test_ParseOCIReference(t *testing.T) {
 		expectedWarning string
 	}{
 		{"image:bytag", "WARNING: Image reference image:bytag uses a tag, not a digest"},
-		{"image:bytag@sha256:abcdef", ""},
-		{"image:@sha256:abcdef", ""},
+		{"image@sha256:be5d77c62dbe7fedfb0a4e5ec2f91078080800ab1f18358e5f31fcc8faa023c4", ""},
 	}
 	for _, tt := range tests {
+		var parsedRef name.Reference
+		var err error
 		stderr := ui.RunWithTestCtx(func(ctx context.Context, write ui.WriteFunc) {
-			ParseOCIReference(ctx, tt.ref)
+			parsedRef, err = ParseOCIReference(ctx, tt.ref)
 		})
+		require.NoError(t, err)
 		if len(tt.expectedWarning) > 0 {
 			assert.Contains(t, stderr, tt.expectedWarning, stderr, "bad warning message")
 		} else {
 			assert.Empty(t, stderr, "expected no warning")
 		}
+		expectedRef, err := name.ParseReference(tt.ref)
+		require.NoError(t, err)
+		assert.Equal(t, expectedRef.Name(), parsedRef.Name())
 	}
 }
